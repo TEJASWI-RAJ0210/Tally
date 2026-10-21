@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Tally",
+    "slug": "tally",
+    "scheme": "tally",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.yourname.tally"
+    },
+    "android": {
+      "package": "com.yourname.tally",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#4F46E5"
+      }
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-status-bar"
+    ],
+    "extra": {
+      "apiUrl": "http://192.168.29.46:3000/api"
+    }
+  }
+}
