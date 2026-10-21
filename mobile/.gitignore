@@ -1,0 +1,8 @@
+.expo
+.env
+.env.*
+!.env.example
+node_modules/
+.next/
+coverage/
+dist
