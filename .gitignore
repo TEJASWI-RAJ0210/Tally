@@ -1,0 +1,43 @@
+# Dependencies and generated outputs
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+build/
+**/build/
+coverage/
+**/coverage/
+.next/
+**/.next/
+.expo/
+**/.expo/
+web-build/
+
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.key
+*.p12
+*.p8
+*.jks
+*.keystore
+google-services.json
+GoogleService-Info.plist
+
+# Logs, operating system, and editor files
+*.log
+*.log.*
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
+*.orig.*

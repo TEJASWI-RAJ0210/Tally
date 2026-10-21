@@ -3,4 +3,11 @@
 !.env.example
 node_modules/
 .next/
+out/
+build/
 coverage/
+*.log
+*.log.*
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
