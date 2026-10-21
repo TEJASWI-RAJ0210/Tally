@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  username     String   @unique
+  email        String   @unique
+  passwordHash String
+  avatarUrl    String?
+  pushToken    String?
+  createdAt    DateTime @default(now())
+
+  friendshipsInitiated Friendship[]    @relation("FriendshipUser")
+  friendshipsReceived  Friendship[]    @relation("FriendshipFriend")
+  groupMemberships     GroupMember[]
+  expensesPaid         Expense[]       @relation("PaidBy")
+  expenseShares        ExpenseShare[]
+  settlementsFrom      Settlement[]    @relation("SettlementFrom")
+  settlementsTo        Settlement[]    @relation("SettlementTo")
+}
+
+enum FriendStatus {
+  PENDING
+  ACCEPTED
+}
+
+model Friendship {
+  id        String       @id @default(uuid())
+  userId    String
+  friendId  String
+  status    FriendStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+
+  user   User @relation("FriendshipUser", fields: [userId], references: [id])
+  friend User @relation("FriendshipFriend", fields: [friendId], references: [id])
+
+  @@unique([userId, friendId])
+}
+
+model Group {
+  id        String   @id @default(uuid())
+  name      String
+  avatarUrl String?
+  createdBy String
+  createdAt DateTime @default(now())
+
+  members  GroupMember[]
+  expenses Expense[]
+}
+
+model GroupMember {
+  id       String   @id @default(uuid())
+  groupId  String
+  userId   String
+  joinedAt DateTime @default(now())
+
+  group Group @relation(fields: [groupId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@unique([groupId, userId])
+}
+
+enum SplitType {
+  EQUAL
+  EXACT
+  PERCENTAGE
+  SHARES
+}
+
+model Expense {
+  id          String    @id @default(uuid())
+  description String
+  amount      Decimal   @db.Decimal(12, 2)
+  category    String?
+  date        DateTime  @default(now())
+  groupId     String?
+  paidById    String
+  splitType   SplitType
+  deletedAt   DateTime? // soft delete
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  group  Group?         @relation(fields: [groupId], references: [id])
+  paidBy User           @relation("PaidBy", fields: [paidById], references: [id])
+  shares ExpenseShare[]
+}
+
+model ExpenseShare {
+  id         String  @id @default(uuid())
+  expenseId  String
+  userId     String
+  amountOwed Decimal @db.Decimal(12, 2)
+
+  expense Expense @relation(fields: [expenseId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([expenseId, userId])
+}
+
+model Settlement {
+  id         String   @id @default(uuid())
+  fromUserId String
+  toUserId   String
+  amount     Decimal  @db.Decimal(12, 2)
+  groupId    String?
+  date       DateTime @default(now())
+  note       String?
+  createdAt  DateTime @default(now())
+
+  fromUser User @relation("SettlementFrom", fields: [fromUserId], references: [id])
+  toUser   User @relation("SettlementTo", fields: [toUserId], references: [id])
+}
