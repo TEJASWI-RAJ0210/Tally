@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Decimal } from "@prisma/client/runtime/library";
 import { prisma } from "@/lib/prisma";
 import { requireUserId, AuthError } from "@/lib/authMiddleware";
-import { getBalanceBetween } from "@/lib/balances";
+import { getBalancesForFriends } from "@/lib/balances";
 
 export async function GET(req: NextRequest) {
   try {
@@ -34,18 +35,15 @@ export async function GET(req: NextRequest) {
       uniqueFriends.set(friend.id, friend);
     }
 
-    const friends = await Promise.all(
-      [...uniqueFriends.values()].map(async (friend) => {
-        const balance = await getBalanceBetween(userId, friend.id);
-        return {
-          id: friend.id,
-          name: friend.name,
-          username: friend.username,
-          avatarUrl: friend.avatarUrl,
-          balance: balance.toFixed(2),
-        };
-      })
-    );
+    const friendList = [...uniqueFriends.values()];
+    const balances = await getBalancesForFriends(userId, friendList.map((friend) => friend.id));
+    const friends = friendList.map((friend) => ({
+      id: friend.id,
+      name: friend.name,
+      username: friend.username,
+      avatarUrl: friend.avatarUrl,
+      balance: (balances.get(friend.id) ?? new Decimal(0)).toFixed(2),
+    }));
 
     const acceptedIds = new Set(uniqueFriends.keys());
     const incomingRequests = incoming.filter((request) => !acceptedIds.has(request.user.id));

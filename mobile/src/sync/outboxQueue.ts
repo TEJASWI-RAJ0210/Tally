@@ -1,12 +1,25 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LEGACY_OUTBOX_KEY = "offline-outbox";
+const syncListeners = new Set<() => void>();
+
+export function registerOutboxSyncListener(listener: () => void) {
+  syncListeners.add(listener);
+  return () => syncListeners.delete(listener);
+}
+
+export function triggerOutboxSync() {
+  syncListeners.forEach((listener) => listener());
+}
 
 export interface OutboxAction {
   id: string;
   type: "CREATE_EXPENSE" | "CREATE_SETTLEMENT";
   payload: unknown;
   createdAt: string;
+  status?: "PENDING" | "NEEDS_ATTENTION";
+  attempts?: number;
+  lastError?: string;
 }
 
 function outboxKey(userId: string) {
@@ -19,8 +32,25 @@ function localId() {
 
 export async function enqueueOfflineAction(action: Omit<OutboxAction, "id" | "createdAt">, userId: string) {
   const queue = await getOutbox(userId);
-  queue.push({ ...action, id: localId(), createdAt: new Date().toISOString() });
+  const id = localId();
+  const payload = action.type === "CREATE_SETTLEMENT" && action.payload && typeof action.payload === "object"
+    ? { ...(action.payload as Record<string, unknown>), idempotencyKey: id }
+    : action.payload;
+  queue.push({ ...action, payload, id, createdAt: new Date().toISOString(), status: "PENDING", attempts: 0 });
   await AsyncStorage.setItem(outboxKey(userId), JSON.stringify(queue));
+}
+
+export async function updateOutboxAction(id: string, userId: string, changes: Partial<OutboxAction>) {
+  const queue = await getOutbox(userId);
+  await AsyncStorage.setItem(outboxKey(userId), JSON.stringify(queue.map((action) => action.id === id ? { ...action, ...changes } : action)));
+}
+
+export async function retryOutboxAction(id: string, userId: string) {
+  await updateOutboxAction(id, userId, { status: "PENDING", attempts: 0, lastError: undefined });
+}
+
+export async function makeIdempotencyKey() {
+  return localId();
 }
 
 export async function getOutbox(userId: string): Promise<OutboxAction[]> {
