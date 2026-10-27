@@ -25,6 +25,8 @@ model User {
   expenseShares        ExpenseShare[]
   settlementsFrom      Settlement[]    @relation("SettlementFrom")
   settlementsTo        Settlement[]    @relation("SettlementTo")
+  settlementsInitiated Settlement[]    @relation("SettlementInitiated")
+  settlementsResolved Settlement[]    @relation("SettlementResolvedBy")
 }
 
 enum FriendStatus {
@@ -43,6 +45,8 @@ model Friendship {
   friend User @relation("FriendshipFriend", fields: [friendId], references: [id])
 
   @@unique([userId, friendId])
+  @@index([friendId, status, createdAt])
+  @@index([userId, status, createdAt])
 }
 
 model Group {
@@ -91,6 +95,9 @@ model Expense {
   group  Group?         @relation(fields: [groupId], references: [id])
   paidBy User           @relation("PaidBy", fields: [paidById], references: [id])
   shares ExpenseShare[]
+
+  @@index([groupId, deletedAt])
+  @@index([paidById, groupId, deletedAt])
 }
 
 model ExpenseShare {
@@ -103,18 +110,39 @@ model ExpenseShare {
   user    User    @relation(fields: [userId], references: [id])
 
   @@unique([expenseId, userId])
+  @@index([userId, expenseId])
 }
 
 model Settlement {
   id         String   @id @default(uuid())
+  idempotencyKey String? @unique
   fromUserId String
   toUserId   String
+  initiatedById String
   amount     Decimal  @db.Decimal(12, 2)
   groupId    String?
+  status     SettlementStatus @default(PENDING)
   date       DateTime @default(now())
   note       String?
+  resolvedAt DateTime?
+  resolvedById String?
   createdAt  DateTime @default(now())
 
   fromUser User @relation("SettlementFrom", fields: [fromUserId], references: [id])
   toUser   User @relation("SettlementTo", fields: [toUserId], references: [id])
+  initiatedBy User @relation("SettlementInitiated", fields: [initiatedById], references: [id])
+  resolvedBy User? @relation("SettlementResolvedBy", fields: [resolvedById], references: [id])
+
+  @@index([fromUserId, date])
+  @@index([toUserId, date])
+  @@index([groupId, date])
+  @@index([groupId, status])
+  @@index([fromUserId, groupId, status])
+  @@index([toUserId, groupId, status])
+}
+
+enum SettlementStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
 }
