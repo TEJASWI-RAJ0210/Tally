@@ -23,7 +23,10 @@
       "expo-status-bar"
     ],
     "extra": {
-      "apiUrl": "http://192.168.29.46:3000/api"
+      "apiUrl": "https://tally-1r3y.onrender.com/api",
+      "eas": {
+        "projectId": "49670cc1-63b2-4b17-ba83-b00b8eed5d03"
+      }
     }
   }
 }
