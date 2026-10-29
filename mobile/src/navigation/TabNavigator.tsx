@@ -30,10 +30,20 @@ export default function TabNavigator() {
         tabBarItemStyle: { paddingTop: 3 },
         tabBarStyle: {
           backgroundColor: colors.surface,
-          borderTopColor: colors.border,
-          height: 64 + insets.bottom,
-          paddingTop: 7,
+          borderTopWidth: 0,
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: 38,
+          height: 70 + insets.bottom,
+          marginHorizontal: 12,
+          paddingTop: 8,
           paddingBottom: Math.max(insets.bottom, 8),
+          overflow: "visible",
+          elevation: 5,
+          shadowColor: colors.text,
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.12,
+          shadowRadius: 8,
         },
       }}
     >
@@ -76,6 +86,7 @@ const localStyles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     overflow: "visible",
+    zIndex: 2,
   },
   addButton: {
     width: 58,
