@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, ScrollView, Pressable, StyleSheet, RefreshControl } from "react-native";
+import { View, Text, ScrollView, Pressable, RefreshControl } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useBalances } from "@/api/hooks/useBalances";
@@ -7,7 +7,7 @@ import { formatCurrency } from "@/utils/currency";
 import { useTheme } from "@/theme/ThemeProvider";
 import { createCommonStyles } from "@/theme/commonStyles";
 import Icon from "@/components/Icon";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import PendingPaymentRequests from "@/components/PendingPaymentRequests";
 
 export default function HomeScreen() {
@@ -16,7 +16,6 @@ export default function HomeScreen() {
   const queryClient = useQueryClient();
   const { colors } = useTheme();
   const styles = createCommonStyles(colors);
-  const insets = useSafeAreaInsets();
 
   const refreshHome = () => {
     void Promise.all([
@@ -29,7 +28,7 @@ export default function HomeScreen() {
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView
         style={styles.screen}
-        contentContainerStyle={{ paddingTop: 14, paddingBottom: 24 }}
+        contentContainerStyle={{ paddingTop: 14, paddingBottom: 32 }}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refreshHome} tintColor={colors.accent} />}
       >
         <Text style={styles.title}>Overview</Text>
@@ -97,13 +96,6 @@ export default function HomeScreen() {
         )}
       </ScrollView>
 
-      <Pressable onPress={() => navigation.navigate("AddExpense")} style={[localStyles.fab, { backgroundColor: colors.accent, bottom: Math.max(insets.bottom, 12) + 16 }]}>
-        <Icon name="plus" color="#fff" size={28} />
-      </Pressable>
     </SafeAreaView>
   );
 }
-
-const localStyles = StyleSheet.create({
-  fab: { position: "absolute", bottom: 32, right: 24, width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center", elevation: 4 },
-});
