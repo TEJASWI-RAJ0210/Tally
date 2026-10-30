@@ -6,6 +6,9 @@ export async function GET(req: NextRequest) {
   try {
     const userId = requireUserId(req);
     const groupId = req.nextUrl.searchParams.get("groupId") ?? undefined;
+    // Settled records still power balance calculations, so only hide them from
+    // the activity feed after 20 days instead of deleting them from storage.
+    const settledCutoff = new Date(Date.now() - 20 * 24 * 60 * 60 * 1000);
 
     const [expenses, settlements] = await Promise.all([
       prisma.expense.findMany({
@@ -18,7 +21,17 @@ export async function GET(req: NextRequest) {
         take: 50,
       }),
       prisma.settlement.findMany({
-        where: { ...(groupId ? { groupId } : { OR: [{ fromUserId: userId }, { toUserId: userId }] }) },
+        where: {
+          ...(groupId ? { groupId } : { OR: [{ fromUserId: userId }, { toUserId: userId }] }),
+          AND: [{
+            OR: [
+              { status: { not: "CONFIRMED" } },
+              { status: "CONFIRMED", resolvedAt: { gte: settledCutoff } },
+              // Older confirmed records may not have a resolvedAt timestamp.
+              { status: "CONFIRMED", resolvedAt: null, date: { gte: settledCutoff } },
+            ],
+          }],
+        },
         include: { fromUser: true, toUser: true },
         orderBy: { date: "desc" },
         take: 50,
